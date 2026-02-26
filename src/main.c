@@ -76,7 +76,8 @@ int main()
 			}
 		}
 		if ( (GPIOA->IDR & (1 << 8)) == 0) // up pressed
-		{			
+		{	
+			// set the limitation of where the sprite can go to in the screen		
 			if (y > 16)
 			{
 				y = y - 1;
