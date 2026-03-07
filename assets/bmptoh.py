@@ -1,3 +1,6 @@
+from PIL import Image
+from os import sys
+
 def RGBToWord(r,g,b):
 	rvalue=0
 	rvalue = rvalue + (g>>5)	
@@ -6,8 +9,7 @@ def RGBToWord(r,g,b):
 	rvalue = rvalue + ((b >> 3) << 3)
 	return rvalue
 
-from PIL import Image
-from os import sys
+
 def main():
 	args=sys.argv
 	if (len(args) != 2):
