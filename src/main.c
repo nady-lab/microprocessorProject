@@ -1,6 +1,9 @@
 #include <stm32f031x6.h>
 #include "display.h"
+
+// file with all the sprites 
 #include "sprites.h"
+
 #include <stdlib.h>
 #include <stdio.h>
 
@@ -12,10 +15,12 @@ void setupIO();
 int isInside(uint16_t x1, uint16_t y1, uint16_t w, uint16_t h, uint16_t px, uint16_t py);
 void enablePullUp(GPIO_TypeDef *Port, uint32_t BitNumber);
 void pinMode(GPIO_TypeDef *Port, uint32_t BitNumber, uint32_t Mode);
-//void drawBee(uint16_t bx, uint16_t by, int facing_right);
-//void uart2_init(void);
-//int __io_putchar(int ch);
-//int quit_requested(void);
+
+// // trying to connect board to terminal
+// void drawBee(uint16_t bx, uint16_t by, int facing_right);
+// void uart2_init(void);
+// int __io_putchar(int ch);
+// int quit_requested(void);
 
 volatile uint32_t milliseconds;
 
@@ -37,11 +42,12 @@ int main()
 	setupIO();
 	//uart2_init();
 
-	/*
+	/* Randomize Random
 	// Simple entropy for srand() — time since boot + some GPIO noise
     uint32_t seed = milliseconds ^ (GPIOB->IDR << 16) ^ GPIOA->IDR ^ 0xA5A5A5A5UL;
     srand(seed);
-    printf("Game seeded with: 0x%08lX\r\n", seed);*/
+    printf("Game seeded with: 0x%08lX\r\n", seed);
+	*/
 
 	// START MENU
 	fillRectangle(0,0,128,160,0); // clear screen
@@ -73,7 +79,9 @@ int main()
 
 	// game starts
 	fillRectangle(0,0,128,160,0);
-	printf("Bee game started - UART OK\r\n");
+	
+	// // send signal to terminal (show that the board and terminal is connected)
+	// printf("Bee game started - UART OK\r\n");
 
 	int score = 0;
 	int correctFlower = rand() % 8;
@@ -93,7 +101,6 @@ int main()
 		flower7,
 		flower8
 	};
-	// putImage(x, y, width, height, image, flipX, flipY);
 
 	int flowerX[8] = {10, 52, 95, 10, 52, 95, 0, 104};
 	int flowerY[8] = {20, 20, 20, 126, 126, 126, 70, 70};
@@ -105,17 +112,16 @@ int main()
 		putImage(flowerX[i], flowerY[i], 24, 24, flowers[flowerType], 0, 0);
 	}
 
-	// draw initial bee (facing right)
-	//drawBee(x, y, 1);
-
 	// main game loop
 	while (1)
 	{
-		/*if (quit_requested())
-		{
-			printf("\r\nGame quit by user. Final score: %d\r\n", score);
-			goto quit_game;
-		}*/
+		// // trying to get quit function working...
+		// if (quit_requested())
+		// {
+		// 	 printf("\r\nGame quit by user. Final score: %d\r\n", score);
+		// 	 goto quit_game;
+		// }
+		
 		hmoved = vmoved = 0;
 		hinverted = vinverted = 0;
 
@@ -169,6 +175,7 @@ int main()
 			{
 				if (hinverted)
 				{
+					// putImage(x, y, width, height, image, flipX, flipY);
 					putImage(x, y, 16, 12, beeLeft, 0, 0);
 				}
 				else
@@ -218,34 +225,11 @@ int main()
         delay(40);
     }
 
-/*quit_game:
-	fillRectangle(0,0,128,160,0);
-	printTextX2("QUIT", 40, 50, red, 0);
-	printTextX2("Score: ",25,85,yellow,0);
-	snprintf(scoreText, sizeof(scoreText), "%d", score);
-	printTextX2(scoreText, 75, 85, yellow, 0);
-
-	printf("Game over screen displayed. Reset to play again.\r\n");
-
-    while (1) {
-        __asm("wfi");
-    }*/
-
     return 0;
 }
 /*
-// Add this helper function before main() in main.c
-// (Helper to draw bee consistently; facing_right=1 for right, 0 for up/left-ish)
-void drawBee(uint16_t bx, uint16_t by, int facing_right)
-{
-    if (facing_right) {
-        putImage(bx, by, 16, 12, beeRight, 0, 0);
-    } else {
-        putImage(bx, by, 12, 16, beeUp, 0, 0);  // fallback to up for simplicity
-    }
-}
 
-void uart2_init(void)   // keep name or rename to uart_init() if you prefer
+void uart2_init(void)  
 {
     // Enable clocks
     RCC->AHBENR  |= RCC_AHBENR_GPIOAEN;     // GPIOA clock
@@ -263,7 +247,7 @@ void uart2_init(void)   // keep name or rename to uart_init() if you prefer
     USART1->CR1 = USART_CR1_TE | USART_CR1_RE | USART_CR1_UE;  // TX+RX+enable
 }
 
-// Redirect printf to USART1
+// Redirect printf to USART1 (terminal)
 int __io_putchar(int ch)
 {
     while (!(USART1->ISR & USART_ISR_TXE));   // wait TX empty
@@ -289,7 +273,8 @@ int quit_requested(void)
         }
     }
     return 0;
-}*/
+}
+*/
 
 void initSysTick(void)
 {
