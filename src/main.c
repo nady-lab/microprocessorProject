@@ -32,9 +32,9 @@ int main()
 	uint16_t oldx = x;
 	uint16_t oldy = y;
 	char scoreText[16]; // Declare scoreText at the top of main
+	char livesText[20]; // Declare livesText at the top of main
 
-	int lives = 3;
-	
+
 	initClock();
 	initSysTick();
 	initSerial();
@@ -69,11 +69,16 @@ int main()
 	// printf("Bee game started - UART OK\r\n");
 
 	int score = 0;
+	int lives = 5;
 	int correctFlower = rand() % 8;
 
 	printText("SCORE:", 10, 2, yellow, 0);
 	snprintf(scoreText, sizeof(scoreText), "%d", score);
 	printText(scoreText, 55, 2, yellow, 0);
+
+	printText("LIVES:", 75, 2, yellow, 0);
+	snprintf(livesText, sizeof(livesText), "%d", lives);
+	printText(livesText, 140, 2, yellow, 0);
 
 	// Store all flower sprites
 	const uint16_t *flowers[8] = {
@@ -223,6 +228,9 @@ int main()
 										flowerCheck[incorrect_flower] == 1)
 						{
 								lives--;
+
+								snprintf(livesText, sizeof(livesText), "%d", lives);
+                				printText(livesText, 110, 2, yellow, 0);
 								flowerCheck[incorrect_flower] = 0;
 								// Erase flower at collection position
                 				fillRectangle(flowerX[incorrect_flower], flowerY[incorrect_flower], 24, 24, 0);
