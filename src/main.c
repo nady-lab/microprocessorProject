@@ -6,6 +6,7 @@
 
 #include <stdlib.h>
 #include <stdio.h>
+#include "serial.h"
 
 void initClock(void);
 void initSysTick(void);
@@ -36,10 +37,14 @@ int main()
 	uint16_t oldx = x;
 	uint16_t oldy = y;
 	char scoreText[16]; // Declare scoreText at the top of main
+
+	int lives = 3;
 	
 	initClock();
 	initSysTick();
+	initSerial();
 	setupIO();
+	
 	//uart2_init();
 
 	/* Randomize Random
@@ -104,6 +109,7 @@ int main()
 
 	int flowerX[8] = {10, 52, 95, 10, 52, 95, 0, 104};
 	int flowerY[8] = {20, 20, 20, 126, 126, 126, 70, 70};
+	int flowerCheck[8] = {1,1,1,1,1,1,1,1};
 
 	// draw initial flowers
 	for (int i = 0; i < 8; i++)
@@ -121,6 +127,9 @@ int main()
 		// 	 printf("\r\nGame quit by user. Final score: %d\r\n", score);
 		// 	 goto quit_game;
 		// }
+
+		printDecimal(score);
+		eputs("\r\n");
 		
 		hmoved = vmoved = 0;
 		hinverted = vinverted = 0;
@@ -221,6 +230,33 @@ int main()
                 oldy = y;
                 //drawBee(x, y, 1);  // facing right
             }
+			else // Check if I am hitting one of the incorrect flowers
+			{
+				for(int incorrect_flower = 1;incorrect_flower<=8;incorrect_flower++){
+
+					if(incorrect_flower == correctFlower){
+						// Do nothing
+					}
+					else{
+						// Do your collsion check as above for the correct flower
+						if ((isInside(flowerX[correctFlower], flowerY[correctFlower], 24, 24, x, y) ||
+							isInside(flowerX[correctFlower], flowerY[correctFlower], 24, 24, x + 12, y) ||
+							isInside(flowerX[correctFlower], flowerY[correctFlower], 24, 24, x, y + 16) ||
+							isInside(flowerX[correctFlower], flowerY[correctFlower], 24, 24, x + 12, y + 16)) &&
+										flowerCheck[incorrect_flower] == 1){
+								lives--;
+								flowerCheck[incorrect_flower] = 0;
+								// Erase flower at collection position
+                				fillRectangle(flowerX[incorrect_flower], flowerY[incorrect_flower], 24, 24, 0);
+
+
+							}
+
+					}
+
+				}
+
+			}
         }
         delay(40);
     }
@@ -228,7 +264,6 @@ int main()
     return 0;
 }
 /*
-
 void uart2_init(void)  
 {
     // Enable clocks
