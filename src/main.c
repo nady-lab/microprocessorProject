@@ -17,11 +17,6 @@ int isInside(uint16_t x1, uint16_t y1, uint16_t w, uint16_t h, uint16_t px, uint
 void enablePullUp(GPIO_TypeDef *Port, uint32_t BitNumber);
 void pinMode(GPIO_TypeDef *Port, uint32_t BitNumber, uint32_t Mode);
 
-// // trying to connect board to terminal
-// void drawBee(uint16_t bx, uint16_t by, int facing_right);
-// void uart2_init(void);
-// int __io_putchar(int ch);
-// int quit_requested(void);
 
 volatile uint32_t milliseconds;
 
@@ -44,15 +39,6 @@ int main()
 	initSysTick();
 	initSerial();
 	setupIO();
-	
-	//uart2_init();
-
-	/* Randomize Random
-	// Simple entropy for srand() — time since boot + some GPIO noise
-    uint32_t seed = milliseconds ^ (GPIOB->IDR << 16) ^ GPIOA->IDR ^ 0xA5A5A5A5UL;
-    srand(seed);
-    printf("Game seeded with: 0x%08lX\r\n", seed);
-	*/
 
 	// START MENU
 	fillRectangle(0,0,128,160,0); // clear screen
@@ -74,12 +60,6 @@ int main()
 			started = 1;
 		}
 		delay(50);
-		/*if (quit_requested())
-		{
-			printf("Quit requested before game start.\r\n");
-			goto quit_game;
-		}
-		delay(40);*/
 	}
 
 	// game starts
@@ -91,9 +71,9 @@ int main()
 	int score = 0;
 	int correctFlower = rand() % 8;
 
-	printTextX2("SCORE:", 10, 2, yellow, 0);
+	printText("SCORE:", 10, 2, yellow, 0);
 	snprintf(scoreText, sizeof(scoreText), "%d", score);
-	printTextX2(scoreText, 80, 2, yellow, 0);
+	printText(scoreText, 55, 2, yellow, 0);
 
 	// Store all flower sprites
 	const uint16_t *flowers[8] = {
@@ -121,12 +101,6 @@ int main()
 	// main game loop
 	while (1)
 	{
-		// // trying to get quit function working...
-		// if (quit_requested())
-		// {
-		// 	 printf("\r\nGame quit by user. Final score: %d\r\n", score);
-		// 	 goto quit_game;
-		// }
 
 		printDecimal(score);
 		eputs("\r\n");
@@ -196,7 +170,7 @@ int main()
 			{
 				putImage(x, y, 12, 16, beeUp, 0, 0);
 			}
-			// Now check for an overlap by checking to see if ANY of the 4 corners of deco are within the target area
+			// Now check for an overlap by checking to see if ANY of the 4 corners of bee are within the flower area
 			if (isInside(flowerX[correctFlower], flowerY[correctFlower], 24, 24, x, y) ||
 				isInside(flowerX[correctFlower], flowerY[correctFlower], 24, 24, x + 12, y) ||
 				isInside(flowerX[correctFlower], flowerY[correctFlower], 24, 24, x, y + 16) ||
@@ -204,9 +178,9 @@ int main()
 			{
 				score++;
 				snprintf(scoreText, sizeof(scoreText), "%d", score);
-                printTextX2(scoreText, 80, 2, yellow, 0);
+                printText(scoreText, 55, 2, yellow, 0);
 
-				printf("Collected! Score now: %d\r\n", score);
+				// printf("Collected! Score now: %d\r\n", score);
 
                 // Erase bee at collection position
                 fillRectangle(x, y, 16, 16, 0);
@@ -232,25 +206,29 @@ int main()
             }
 			else // Check if I am hitting one of the incorrect flowers
 			{
-				for(int incorrect_flower = 1;incorrect_flower<=8;incorrect_flower++){
+				for(int incorrect_flower = 1;incorrect_flower<=8;incorrect_flower++)
+				{
 
-					if(incorrect_flower == correctFlower){
+					if(incorrect_flower == correctFlower)
+					{
 						// Do nothing
 					}
-					else{
+					else
+					{
 						// Do your collsion check as above for the correct flower
-						if ((isInside(flowerX[correctFlower], flowerY[correctFlower], 24, 24, x, y) ||
-							isInside(flowerX[correctFlower], flowerY[correctFlower], 24, 24, x + 12, y) ||
-							isInside(flowerX[correctFlower], flowerY[correctFlower], 24, 24, x, y + 16) ||
-							isInside(flowerX[correctFlower], flowerY[correctFlower], 24, 24, x + 12, y + 16)) &&
-										flowerCheck[incorrect_flower] == 1){
+						if ((isInside(flowerX[incorrect_flower], flowerY[incorrect_flower], 24, 24, x, y) ||
+							isInside(flowerX[incorrect_flower], flowerY[incorrect_flower], 24, 24, x + 12, y) ||
+							isInside(flowerX[incorrect_flower], flowerY[incorrect_flower], 24, 24, x, y + 16) ||
+							isInside(flowerX[incorrect_flower], flowerY[incorrect_flower], 24, 24, x + 12, y + 16)) &&
+										flowerCheck[incorrect_flower] == 1)
+						{
 								lives--;
 								flowerCheck[incorrect_flower] = 0;
 								// Erase flower at collection position
                 				fillRectangle(flowerX[incorrect_flower], flowerY[incorrect_flower], 24, 24, 0);
 
 
-							}
+						}
 
 					}
 
@@ -263,53 +241,6 @@ int main()
 
     return 0;
 }
-/*
-void uart2_init(void)  
-{
-    // Enable clocks
-    RCC->AHBENR  |= RCC_AHBENR_GPIOAEN;     // GPIOA clock
-    RCC->APB2ENR |= RCC_APB2ENR_USART1EN;   // USART1 clock (F0 uses APB2 for USART1)
-
-    // PA2 = AF1 = USART1_TX (remapped)
-    // PA15 = AF1 = USART1_RX (remapped)
-    GPIOA->MODER   &= ~((3u << (2*2)) | (3u << (2*15)));   // clear mode
-    GPIOA->MODER   |=  ((2u << (2*2)) | (2u << (2*15)));   // AF mode
-    GPIOA->AFR[0]  |=  (1u << (4*2));                      // AF1 for PA2
-    GPIOA->AFR[1]  |=  (1u << (4*(15-8)));                 // AF1 for PA15
-
-    // Baud rate: 48 MHz / 115200 ≈ 416.666 → BRR = 0x1A0 (416 + 10/16 fraction)
-    USART1->BRR = 0x1A0;
-    USART1->CR1 = USART_CR1_TE | USART_CR1_RE | USART_CR1_UE;  // TX+RX+enable
-}
-
-// Redirect printf to USART1 (terminal)
-int __io_putchar(int ch)
-{
-    while (!(USART1->ISR & USART_ISR_TXE));   // wait TX empty
-    USART1->TDR = (uint8_t)ch;
-    return ch;
-}
-
-// Non-blocking quit check (echo printable chars)
-int quit_requested(void)
-{
-    if (USART1->ISR & USART_ISR_RXNE)
-    {
-        uint8_t c = (uint8_t)USART1->RDR;
-
-        // Echo only printable (cleaner terminal)
-        if (c >= 32 && c <= 126) {
-            while (!(USART1->ISR & USART_ISR_TXE));
-            USART1->TDR = c;
-        }
-
-        if (c == 'Q' || c == 'q') {
-            return 1;
-        }
-    }
-    return 0;
-}
-*/
 
 void initSysTick(void)
 {
