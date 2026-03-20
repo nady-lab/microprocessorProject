@@ -17,8 +17,24 @@ int isInside(uint16_t x1, uint16_t y1, uint16_t w, uint16_t h, uint16_t px, uint
 void enablePullUp(GPIO_TypeDef *Port, uint32_t BitNumber);
 void pinMode(GPIO_TypeDef *Port, uint32_t BitNumber, uint32_t Mode);
 
+// functions that controls the LEDs
+void redOn(void);
+void redOff(void);
+void greenOn(void);
+void greenOff(void);
+
+// int quit_requested(int);
+
 
 volatile uint32_t milliseconds;
+
+/* Layout constants - adjust if sprite sizes change */
+#define SCREEN_W 128
+#define SCREEN_H 160
+#define FLOWER_W 24
+#define FLOWER_H 24
+#define BEE_CLEAR_W 16 /* rectangle used to erase bee (covers both orientations) */
+#define BEE_CLEAR_H 16
 
 int main()
 {
@@ -34,6 +50,7 @@ int main()
 	char scoreText[16]; // Declare scoreText at the top of main
 	char livesText[20]; // Declare livesText at the top of main
 
+	// int quit = 0;
 
 	initClock();
 	initSysTick();
@@ -41,7 +58,7 @@ int main()
 	setupIO();
 
 	// START MENU
-	fillRectangle(0,0,128,160,0); // clear screen
+	fillRectangle(0, 0, SCREEN_W, SCREEN_H, 0); // clear screen
 
 	// print centered menu text
 	uint32_t yellow = RGBToWord(0xff, 0xff, 0);
@@ -63,7 +80,7 @@ int main()
 	}
 
 	// game starts
-	fillRectangle(0,0,128,160,0);
+	fillRectangle(0, 0, SCREEN_W, SCREEN_H, 0);
 	
 	// // send signal to terminal (show that the board and terminal is connected)
 	// printf("Bee game started - UART OK\r\n");
@@ -76,9 +93,9 @@ int main()
 	snprintf(scoreText, sizeof(scoreText), "%d", score);
 	printText(scoreText, 55, 2, yellow, 0);
 
-	printText("LIVES:", 75, 2, yellow, 0);
+	printText("LIVES:", 70, 2, yellow, 0);
 	snprintf(livesText, sizeof(livesText), "%d", lives);
-	printText(livesText, 140, 2, yellow, 0);
+	printText(livesText, 115, 2, yellow, 0);
 
 	// Store all flower sprites
 	const uint16_t *flowers[8] = {
@@ -100,15 +117,24 @@ int main()
 	for (int i = 0; i < 8; i++)
 	{
 		int flowerType = rand() % 8;
-		putImage(flowerX[i], flowerY[i], 24, 24, flowers[flowerType], 0, 0);
+		putImage(flowerX[i], flowerY[i], FLOWER_W, FLOWER_H, flowers[flowerType], 0, 0);
 	}
 
 	// main game loop
-	while (1)
+	int last_score = -1;
+
+	while (/*!quit*/ 1)
 	{
 
-		printDecimal(score);
-		eputs("\r\n");
+		//quit = quit_requested(score);
+
+		/* only print score when it changes to avoid flooding UART */
+		if (score != last_score)
+		{
+			printDecimal(score);
+			eputs("\r\n");
+			last_score = score;
+		}
 		
 		hmoved = vmoved = 0;
 		hinverted = vinverted = 0;
@@ -154,7 +180,7 @@ int main()
 		if ((vmoved) || (hmoved))
 		{
 			// only redraw if there has been some movement (reduces flicker)
-			fillRectangle(oldx, oldy, 16, 16, 0);
+			fillRectangle(oldx, oldy, BEE_CLEAR_W, BEE_CLEAR_H, 0);
 			oldx = x;
 			oldy = y;
 
@@ -176,31 +202,36 @@ int main()
 				putImage(x, y, 12, 16, beeUp, 0, 0);
 			}
 			// Now check for an overlap by checking to see if ANY of the 4 corners of bee are within the flower area
-			if (isInside(flowerX[correctFlower], flowerY[correctFlower], 24, 24, x, y) ||
-				isInside(flowerX[correctFlower], flowerY[correctFlower], 24, 24, x + 12, y) ||
-				isInside(flowerX[correctFlower], flowerY[correctFlower], 24, 24, x, y + 16) ||
-				isInside(flowerX[correctFlower], flowerY[correctFlower], 24, 24, x + 12, y + 16))
+			if (isInside(flowerX[correctFlower], flowerY[correctFlower], FLOWER_W, FLOWER_H, x, y) ||
+				isInside(flowerX[correctFlower], flowerY[correctFlower], FLOWER_W, FLOWER_H, x + 12, y) ||
+				isInside(flowerX[correctFlower], flowerY[correctFlower], FLOWER_W, FLOWER_H, x, y + 16) ||
+				isInside(flowerX[correctFlower], flowerY[correctFlower], FLOWER_W, FLOWER_H, x + 12, y + 16))
 			{
+				greenOn();
+				delay(1000);
+				greenOff();
+
 				score++;
 				snprintf(scoreText, sizeof(scoreText), "%d", score);
                 printText(scoreText, 55, 2, yellow, 0);
 
 				// printf("Collected! Score now: %d\r\n", score);
 
-                // Erase bee at collection position
-                fillRectangle(x, y, 16, 16, 0);
+				// Erase bee at collection position (clear rectangle that covers bee in any orientation)
+				fillRectangle(x, y, BEE_CLEAR_W, BEE_CLEAR_H, 0);
 
-                // Clear old flowers
-                for (int i = 0; i < 8; i++) {
-                    fillRectangle(flowerX[i], flowerY[i], 24, 24, 0);
-                }
+				// Clear old flowers
+				for (int i = 0; i < 8; i++) {
+					fillRectangle(flowerX[i], flowerY[i], FLOWER_W, FLOWER_H, 0);
+				}
 
-                // Pick new correct flower & redraw all
-                correctFlower = rand() % 8;
-                for (int i = 0; i < 8; i++) {
-                    int flowerType = rand() % 8;
-                    putImage(flowerX[i], flowerY[i], 24, 24, flowers[flowerType], 0, 0);
-                }
+				// Pick new correct flower & redraw all (reset flowerCheck)
+				correctFlower = rand() % 8;
+				for (int i = 0; i < 8; i++) {
+					int flowerType = rand() % 8;
+					putImage(flowerX[i], flowerY[i], FLOWER_W, FLOWER_H, flowers[flowerType], 0, 0);
+					flowerCheck[i] = 1;
+				}
 
                 // Reset & draw bee at center
                 x = 55;
@@ -211,7 +242,7 @@ int main()
             }
 			else // Check if I am hitting one of the incorrect flowers
 			{
-				for(int incorrect_flower = 1;incorrect_flower<=8;incorrect_flower++)
+				for(int incorrect_flower = 0; incorrect_flower <= 7; incorrect_flower++)
 				{
 
 					if(incorrect_flower == correctFlower)
@@ -221,33 +252,50 @@ int main()
 					else
 					{
 						// Do your collsion check as above for the correct flower
-						if ((isInside(flowerX[incorrect_flower], flowerY[incorrect_flower], 24, 24, x, y) ||
-							isInside(flowerX[incorrect_flower], flowerY[incorrect_flower], 24, 24, x + 12, y) ||
-							isInside(flowerX[incorrect_flower], flowerY[incorrect_flower], 24, 24, x, y + 16) ||
-							isInside(flowerX[incorrect_flower], flowerY[incorrect_flower], 24, 24, x + 12, y + 16)) &&
+						if ((isInside(flowerX[incorrect_flower], flowerY[incorrect_flower], FLOWER_W, FLOWER_H, x, y) ||
+							isInside(flowerX[incorrect_flower], flowerY[incorrect_flower], FLOWER_W, FLOWER_H, x + 12, y) ||
+							isInside(flowerX[incorrect_flower], flowerY[incorrect_flower], FLOWER_W, FLOWER_H, x, y + 16) ||
+							isInside(flowerX[incorrect_flower], flowerY[incorrect_flower], FLOWER_W, FLOWER_H, x + 12, y + 16)) &&
 										flowerCheck[incorrect_flower] == 1)
 						{
-								lives--;
+							redOn();
 
-								snprintf(livesText, sizeof(livesText), "%d", lives);
-                				printText(livesText, 110, 2, yellow, 0);
-								flowerCheck[incorrect_flower] = 0;
-								// Erase flower at collection position
-                				fillRectangle(flowerX[incorrect_flower], flowerY[incorrect_flower], 24, 24, 0);
+							lives--;
 
+							snprintf(livesText, sizeof(livesText), "%d", lives);
+							printText(livesText, 115, 2, yellow, 0);
 
-						}
+							flowerCheck[incorrect_flower] = 0;
+							// Erase flower at collection position
+							fillRectangle(flowerX[incorrect_flower], flowerY[incorrect_flower], FLOWER_W, FLOWER_H, 0);
 
+							redOff();
+						}		
 					}
 
 				}
 
 			}
+
+			if(lives == 0)
+			{
+				fillRectangle(x, y, BEE_CLEAR_W, BEE_CLEAR_H, 0);
+				fillRectangle(0, 0, SCREEN_W, SCREEN_H, 0);
+
+				// print centered menu text
+				uint32_t yellow = RGBToWord(0xff, 0xff, 0);
+				printTextX2("GAME OVER", 10, 35, yellow, 0);
+				printTextX2("SCORE: ", 15, 65, yellow, 0);
+				snprintf(scoreText, sizeof(scoreText), "%d", score);
+				printTextX2(scoreText, 90, 65, yellow, 0);
+				printText("press the button", 10, 95, yellow, 0);
+				printText("to play again!!", 15, 110, yellow, 0);
+			}
         }
         delay(40);
     }
 
-    return 0;
+	return 0;
 }
 
 void initSysTick(void)
@@ -318,7 +366,7 @@ void pinMode(GPIO_TypeDef *Port, uint32_t BitNumber, uint32_t Mode)
 }
 int isInside(uint16_t x1, uint16_t y1, uint16_t w, uint16_t h, uint16_t px, uint16_t py)
 {
-	// checks to see if point px,py is within the rectange defined by x,y,w,h
+	// checks to seet px,py is within the rectange defined by x,y,w,h
 	uint16_t x2, y2;
 	x2 = x1 + w;
 	y2 = y1 + h;
@@ -346,3 +394,51 @@ void setupIO()
 	enablePullUp(GPIOA, 8);
 }
 
+// function that turns the red LED on
+void redOn(void)
+{
+	GPIOA->ODR |= (1 << 10);
+}
+void redOff(void)
+{
+	GPIOA->ODR &= ~(1 << 10);
+}
+
+void greenOn(void)
+{
+	GPIOA->ODR |= (1 << 9);
+}
+void greenOff(void)
+{
+	GPIOA->ODR &= ~(1 << 9);
+}
+
+/* int quit_requested(int score)
+{
+	char ch;
+
+	ch = egetchar();
+	eputchar(ch);
+
+	ch = ch | 32;
+
+	if (ch == 'q')
+	{
+		fillRectangle(0, 0, SCREEN_W, SCREEN_H, 0);
+
+		char scoreText[20];
+
+		// print centered menu text
+		uint32_t yellow = RGBToWord(0xff, 0xff, 0);
+		printTextX2("GAME QUIT", 10, 35, yellow, 0);
+		printTextX2("SCORE: ", 15, 65, yellow, 0);
+		snprintf(scoreText, sizeof(scoreText), "%d", score);
+		printTextX2(scoreText, 90, 65, yellow, 0);
+		printText("press the button", 10, 95, yellow, 0);
+		printText("to play again!!", 15, 110, yellow, 0);
+
+		return 1;
+	}
+
+	return 0;
+} */
