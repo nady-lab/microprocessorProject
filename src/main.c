@@ -37,8 +37,8 @@ void greenOff(void);
 
 void startMenu(void);									   // setup menu for the start of the game
 void initGame(int *score, int *lives, int *correctFlower); // reset game state (score, lives, correct flower)
-void drawGameInfo(uint32_t yellow, int score, int lives);  // draws the score and the remaining lives at the top of the screen
-void handlePause(uint32_t yellow, uint16_t x, uint16_t y,  // function for when the pause button is pressed
+void drawGameInfo(uint32_t pink, int score, int lives);  // draws the score and the remaining lives at the top of the screen
+void handlePause(uint32_t pink, uint16_t x, uint16_t y,  // function for when the pause button is pressed
 				 int hmoved, int hinverted, int vmoved,
 				 int score, int lives,
 				 const uint16_t *flowers[8], int flowerX[], int flowerY[], int flowerCheck[]);
@@ -48,7 +48,7 @@ void redrawFlowers(const uint16_t *flowers[8], int flowerX[], int flowerY[], int
 void checkCollisions(uint16_t *x, uint16_t *y, uint16_t *oldx, uint16_t *oldy,
 					 int *score, int *lives, int *correctFlower, int *flowerCheck,
 					 const uint16_t *flowers[8], int flowerX[], int flowerY[]);
-void gameOverScreen(uint32_t yellow, int score); // draws the game over screen and goes back to the startMenu after UP is pressed
+void gameOverScreen(uint32_t pink, int score); // draws the game over screen and goes back to the startMenu after UP is pressed
 
 // serial communication helpers
 int serialAvailable(void); // check if a character is available in UART buffer
@@ -78,7 +78,7 @@ volatile uint32_t milliseconds = 0; // incremented every 1ms by SysTick interrup
 int main(void)
 {
 	// define color used for the on-screen text
-	uint32_t yellow = RGBToWord(0xff, 0xff, 0);
+	uint32_t pink = RGBToWord(0xff, 0xaf, 0xaf);
 
 	// initialize all hardware components
 	initClock();   // set system clock
@@ -90,7 +90,7 @@ int main(void)
 	while (1)
 	{
 		startMenu(); // display start screen and wait for player input
-		eputs("The game... HAS STARTEEED!!!\r\n");
+		eputs("Game started!!!\r\n");
 
 		// GAME STATE VARIABLES (reset at start of each new game)
 		int score = 0;		   // player's current score
@@ -128,7 +128,7 @@ int main(void)
 		}
 
 		// display initial score and lives
-		drawGameInfo(yellow, score, lives);
+		drawGameInfo(pink, score, lives);
 
 		// INNER LOOP -> main gameplay loop (runs until quit or game over)
 		while (1)
@@ -136,9 +136,9 @@ int main(void)
 			// check for the quit request from the terminal (Q/q)
 			if (quitRequested())
 			{
-				uint32_t yellow = RGBToWord(0xff, 0xff, 0);
+				uint32_t pink = RGBToWord(0xff, 0xaf, 0xaf);
 				fillRectangle(0, 0, SCREEN_W, SCREEN_H, 0);
-				printText("QUITTING...", 25, 75, yellow, 0);
+				printText("QUITTING...", 25, 75, pink, 0);
 				delay(2000); // allow user to see message
 				break;		 // exit game loop -> return to menu
 			}
@@ -151,7 +151,7 @@ int main(void)
 			handleInput(&x, &y, &hmoved, &vmoved, &hinverted, &vinverted);
 
 			// handles pause button (freezes game until resumed)
-			handlePause(yellow, x, y, hmoved, hinverted, vmoved,
+			handlePause(pink, x, y, hmoved, hinverted, vmoved,
 						score, lives, flowers, flowerX, flowerY, flowerCheck);
 
 			// only redraw if the bee actually moved (reduces screen flicker)
@@ -172,13 +172,13 @@ int main(void)
 								flowerCheck, flowers, flowerX, flowerY);
 
 				// update score and lives display
-				drawGameInfo(yellow, score, lives);
+				drawGameInfo(pink, score, lives);
 			}
 
 			// check for game over condition
 			if (lives <= 0)
 			{
-				gameOverScreen(yellow, score);
+				gameOverScreen(pink, score);
 				break; // exit inner loop -> will restart from startMenu
 			}
 
@@ -339,7 +339,7 @@ int quitRequested(void)
 
 		if (c == 'Q' || c == 'q')
 		{
-			eputs("\r\nPlayer quit the game.\r\n");
+			eputs("\tYou quit the game :( Hope you come back soon!\r\n\n");
 			return 1;
 		}
 	}
@@ -375,18 +375,18 @@ void redOff(void)
 // display start screen and wait for player to press UP to begin the game
 void startMenu(void)
 {
-	uint32_t yellow = RGBToWord(0xff, 0xff, 0);
+	uint32_t pink = RGBToWord(0xff, 0xaf, 0xaf);
 
 	// clear screen
 	fillRectangle(0, 0, SCREEN_W, SCREEN_H, 0);
 
 	// render start menu instructions
-	printTextX2("WELCOME", 23, 20, yellow, 0);
-	printTextX2("PRESS UP", 17, 55, yellow, 0);
-	printTextX2("TO START", 17, 75, yellow, 0);
-	printText("ENTER Q OR q", 22, 115, yellow, 0);
-	printText("TO QUIT", 40, 125, yellow, 0);
-	printText("AT ANYTIME", 30, 135, yellow, 0);
+	printTextX2("BUZZ RUSH", 12, 20, pink, 0);
+	printTextX2("PRESS UP", 17, 55, pink, 0);
+	printTextX2("TO START", 17, 75, pink, 0);
+	printText("ENTER Q OR q", 22, 115, pink, 0);
+	printText("TO QUIT", 40, 125, pink, 0);
+	printText("AT ANYTIME", 30, 135, pink, 0);
 
 	// wait until the player presses the UP button to start the game
 	while (1)
@@ -409,23 +409,23 @@ void initGame(int *score, int *lives, int *correctFlower)
 }
 
 // display current score and remaining lives on screen
-void drawGameInfo(uint32_t yellow, int score, int lives)
+void drawGameInfo(uint32_t pink, int score, int lives)
 {
 	char scoreText[16];
 	char livesText[16];
 
-	printText("SCORE:", 10, 2, yellow, 0);
+	printText("SCORE:", 10, 2, pink, 0);
 	snprintf(scoreText, sizeof(scoreText), "%d", score);
-	printText(scoreText, 55, 2, yellow, 0);
+	printText(scoreText, 55, 2, pink, 0);
 
-	printText("LIVES:", 70, 2, yellow, 0);
+	printText("LIVES:", 70, 2, pink, 0);
 	snprintf(livesText, sizeof(livesText), "%d", lives);
-	printText(livesText, 115, 2, yellow, 0);
+	printText(livesText, 115, 2, pink, 0);
 }
 
 // pause game when button is pressed and display pause screen
 // waits for player input to resume and restores game state
-void handlePause(uint32_t yellow, uint16_t x, uint16_t y,
+void handlePause(uint32_t pink, uint16_t x, uint16_t y,
 				 int hmoved, int hinverted, int vmoved,
 				 int score, int lives,
 				 const uint16_t *flowers[8], int flowerX[], int flowerY[], int flowerCheck[])
@@ -434,14 +434,14 @@ void handlePause(uint32_t yellow, uint16_t x, uint16_t y,
 	{
 		delay(200); // debounce
 
-		eputs("Player has paused the game...");
-		eputs("\r\n");
+		eputs("Game paused...");
+		eputs("\r\n\n");
 
 		fillRectangle(0, 0, SCREEN_W, SCREEN_H, 0);
-		printText("GAME PAUSED", 25, 25, yellow, 0);
-		printText("PRESS", 45, 75, yellow, 0);
-		printText("BUTTON AGAIN", 20, 95, yellow, 0);
-		printText("TO RESUME", 30, 115, yellow, 0);
+		printText("GAME PAUSED", 25, 25, pink, 0);
+		printText("PRESS", 45, 75, pink, 0);
+		printText("BUTTON AGAIN", 20, 95, pink, 0);
+		printText("TO RESUME", 30, 115, pink, 0);
 
 		// wait for button release to avoid immediate re-trigger
 		while ((GPIOB->IDR & (1 << 0)) == 0);
@@ -456,14 +456,14 @@ void handlePause(uint32_t yellow, uint16_t x, uint16_t y,
 			}
 		}
 
-		eputs("Player has continued the game... yayyy!!!!");
-		eputs("\r\n");
+		eputs("Game resumed");
+		eputs("\r\n\n");
 
 		// Restore the game screen
 		fillRectangle(0, 0, SCREEN_W, SCREEN_H, 0);
 
 		// Redraw HUD
-		drawGameInfo(yellow, score, lives);
+		drawGameInfo(pink, score, lives);
 
 		// Redraw active flowers
 		for (int i = 0; i < 8; i++)
@@ -584,8 +584,9 @@ void checkCollisions(uint16_t *x, uint16_t *y, uint16_t *oldx, uint16_t *oldy,
         delay(30);
         playNoteFor(G5, 150);
 
-		eputs("Correct flower! Score: "); 
+		eputs("Niice! You found the right flower\nScore: "); 
 		printScore(*score); 
+		eputs("\n");
 
 		// clear bee's old position
 		fillRectangle(*x, *y, BEE_CLEAR_W, BEE_CLEAR_H, 0);
@@ -637,8 +638,9 @@ void checkCollisions(uint16_t *x, uint16_t *y, uint16_t *oldx, uint16_t *oldy,
 			delay(50);
 			playNoteFor(C4, 300);
 		
-			eputs("Wrong! Lives: ");
+			eputs("Oops! That's the wrong flower\nLives left: ");
 			printScore(*lives); 
+			eputs("\n");
 
 			// deactivate the wrong flower
 			flowerCheck[i] = 0;
@@ -649,8 +651,12 @@ void checkCollisions(uint16_t *x, uint16_t *y, uint16_t *oldx, uint16_t *oldy,
 }
 
 // display game over screen and wait for player to restart
-void gameOverScreen(uint32_t yellow, int score)
+void gameOverScreen(uint32_t pink, int score)
 {
+	eputs("Game over :(\nFinal Score: ");
+	printScore(score);
+	eputs("\n");
+
     // Sad descending sound
     playNoteFor(G4, 150);
     delay(100);
@@ -662,14 +668,14 @@ void gameOverScreen(uint32_t yellow, int score)
 
 	char scoreText[16];
 
-	printTextX2("GAME OVER", 12, 15, yellow, 0);
-	printTextX2("SCORE:", 18, 45, yellow, 0);
+	printTextX2("GAME OVER", 12, 15, pink, 0);
+	printTextX2("SCORE:", 18, 45, pink, 0);
 
 	snprintf(scoreText, sizeof(scoreText), "%d", score);
-	printTextX2(scoreText, 92, 45, yellow, 0);
+	printTextX2(scoreText, 92, 45, pink, 0);
 
-	printText("PRESS UP", 37, 100, yellow, 0);
-	printText("TO RESTART", 30, 115, yellow, 0);
+	printText("PRESS UP", 37, 100, pink, 0);
+	printText("TO RESTART", 30, 115, pink, 0);
 
 	// wait until the player presses UP to restart
 	while (1)
