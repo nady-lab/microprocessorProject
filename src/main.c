@@ -393,12 +393,23 @@ void startMenu(void)
 	{
 		if ((GPIOA->IDR & (1 << 8)) == 0) // UP button pressed
 		{
+			redOn();
 			playNoteFor(C4, 100);
 			delay(50);
+			redOff();
+			greenOn();
 			playNoteFor(E4, 100);
 			delay(50);
+			greenOff();
 			playNoteFor(G4, 200);
-			delay(120); // debounce to avoid accidental triggers
+			greenOn();
+			delay(50);
+			redOn();
+			delay(50);
+			greenOff();
+			redOff();
+
+			delay(50); // debounce to avoid accidental triggers
 			return;		// exit menu and start game
 		}
 		delay(50); // small delay to reduce CPU usage
@@ -667,10 +678,20 @@ void gameOverScreen(uint32_t pink, int score)
 
     // Sad descending sound
     playNoteFor(G4, 150);
+	redOn();
     delay(100);
-    playNoteFor(E4, 150);
+	redOff();
+	playNoteFor(E4, 150);
+	greenOn();
     delay(100);
+	greenOff();
     playNoteFor(C4, 400);
+	redOn();
+	delay(100);
+	greenOn();
+	delay(100);
+	redOff();
+	greenOff();
     
 	fillRectangle(0, 0, SCREEN_W, SCREEN_H, 0);
 
