@@ -411,6 +411,9 @@ void initGame(int *score, int *lives, int *correctFlower)
 	*score = 0;
 	*lives = 5;
 	*correctFlower = rand() % 8;
+
+	redOff();
+	greenOff();
 }
 
 // display current score and remaining lives on screen
