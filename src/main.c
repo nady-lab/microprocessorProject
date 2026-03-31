@@ -309,7 +309,7 @@ void setupIO()
 	pinMode(GPIOA, 10, 1); // Red LED (PA10)
 
 	// configure speaker
-	pinMode(GPIOB, 1, 1);
+	pinMode(GPIOB, 1, 1); // (PB1)
 
 	// before display begin
 	redOff();	// turn red LED off
@@ -393,6 +393,11 @@ void startMenu(void)
 	{
 		if ((GPIOA->IDR & (1 << 8)) == 0) // UP button pressed
 		{
+			playNoteFor(C4, 100);
+			delay(50);
+			playNoteFor(E4, 100);
+			delay(50);
+			playNoteFor(G4, 200);
 			delay(120); // debounce to avoid accidental triggers
 			return;		// exit menu and start game
 		}
