@@ -65,7 +65,7 @@ The project demonstrates core embedded programming concepts including **GPIO inp
 
 ---
 
-## 🎛 Controls
+## Controls
 
 | Input | Action |
 |------|--------|
