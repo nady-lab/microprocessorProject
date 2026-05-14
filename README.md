@@ -1,6 +1,6 @@
-# 🐝 Buzz Rush
+# Buzz Rush
 
-## 📌 Overview
+## Overview
 
 **Buzz Rush** is an embedded systems game developed for the **STM32F031K6** microcontroller using C and PlatformIO.
 
@@ -10,7 +10,7 @@ The project demonstrates core embedded programming concepts including **GPIO inp
 
 ---
 
-## 🖥 Technical Information
+## Technical Information
 
 - **Microcontroller:** STM32F031K6  
 - **Programming Language:** C  
@@ -22,7 +22,7 @@ The project demonstrates core embedded programming concepts including **GPIO inp
 
 ---
 
-## 🎮 Game Features
+## Game Features
 
 - **Main Menu System**
   - Start screen with instructions
@@ -69,16 +69,16 @@ The project demonstrates core embedded programming concepts including **GPIO inp
 
 | Input | Action |
 |------|--------|
-| ⬆️ UP | Move up / Start game / Restart |
-| ⬇️ DOWN | Move down |
-| ⬅️ LEFT | Move left |
-| ➡️ RIGHT | Move right |
-| 🔘 Button (PB0) | Pause / Resume |
-| ⌨️ Q / q | Quit game (via serial terminal) |
+| UP | Move up / Start game / Restart |
+| DOWN | Move down |
+| LEFT | Move left |
+| RIGHT | Move right |
+| Button (PB0) | Pause / Resume |
+| Q / q | Quit game (via serial terminal) |
 
 ---
 
-## ⚙ Implementation Details
+## Implementation Details
 
 - **Game Loop Structure**
   - Outer loop → handles restarting the game  
@@ -105,13 +105,13 @@ The project demonstrates core embedded programming concepts including **GPIO inp
 
 ---
 
-## ⭐ Conclusion
+## Conclusion
 
 This project demonstrates a complete embedded game system using the STM32 platform. It integrates **real-time input handling, graphical rendering, sound generation, and serial communication** into a fully interactive application.
 
 ---
 
-## 🚀 Future Improvements
+## Future Improvements
 
 - Add difficulty scaling (faster movement, more flowers)
 - Store high scores in non-volatile memory
